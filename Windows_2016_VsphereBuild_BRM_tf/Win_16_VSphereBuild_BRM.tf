@@ -108,7 +108,7 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   provisioner "file" { ### add this to copy the install batch file to the server
-    source      = "C:\\users\\clewis\\documents\\github\\devops_trn\\swe-dso-infrastructure\\bgann-test\\scripts\\server_hardening.ps1"
+    source      = "\\\\10.250.5.25\\devshare\\Hardening\\Scripts\\server_hardening.ps1"
     destination = "C:\\scripts\\server_hardening.ps1"
 
     connection { ### add this for the ability to run post install scripts
@@ -123,11 +123,12 @@ resource "vsphere_virtual_machine" "vm" {
   }
    
   }
-provisioner "remote-exec" { ### add this to run the install batch file
+  #provisioner "null_resource" "remoting" {
+  provisioner "remote-exec" {
     inline = [
-      "Powershell.exe  -executionpolicy bypass -file C:\\scripts\\server_hardening.ps1"
+      "Powershell.exe -executionpolicy bypass -file C:\\scripts\\server_hardening.ps1",
     ]
-       
+
     connection { ### add this for the ability to run post install scripts
     type     = "winrm"
     #host     = "${var.vsphere_hostname}"
@@ -136,11 +137,14 @@ provisioner "remote-exec" { ### add this to run the install batch file
     https    = "false"
     insecure = "true"
     use_ntlm = "true"
-    #timeout  = "05m"
+    #timeout  = "60m"
+    }
+  
+}
   }
 
 
-}
-}
+
+
 
 
