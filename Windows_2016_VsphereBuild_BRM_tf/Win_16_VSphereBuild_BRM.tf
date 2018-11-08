@@ -52,8 +52,8 @@ data "vsphere_virtual_machine" "template" {
 }
 resource "vsphere_virtual_machine" "vm" {
   name             = "${var.vsphere_vm_name}"
-  #resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
-  resource_pool_id = "${data.vsphere_compute_cluster.cluster.resource_pool_id}"
+  resource_pool_id = "${data.vsphere_resource_pool.pool.id}"
+  #resource_pool_id = "${data.vsphere_compute_cluster.cluster.resource_pool_id}"
   datastore_id     = "${data.vsphere_datastore.datastore.id}"
 
   num_cpus = "${var.vsphere_vcpu_number}"
@@ -68,22 +68,21 @@ resource "vsphere_virtual_machine" "vm" {
   }
 
   disk {
-    #label = "${var.vsphere_disk0_name}"
-    label = "disk0"
+    label = "${var.vsphere_disk0_name}"
     #size  = "${var.vsphere_disk0_size}"  # Custom disk size
     size  = "${data.vsphere_virtual_machine.template.disks.0.size}"  # use the template size
-    #eagerly_scrub = "${data.vsphere_virtual_machine.template.disks.0.eagerly_scrub}"
+    eagerly_scrub = "${data.vsphere_virtual_machine.template.disks.0.eagerly_scrub}"
     thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
   }
 
-  disk {
-    unit_number = 1
-    label = "${var.vsphere_disk1_name}"
-    size  = "${var.vsphere_disk1_size}"  # Custom disk size
-    #size  = "${data.vsphere_virtual_machine.template.disks.0.size}"  # use the template size
-    #eagerly_scrub = "${data.vsphere_virtual_machine.template.disks.0.eagerly_scrub}"
-    thin_provisioned = "${data.vsphere_virtual_machine.template.disks.0.thin_provisioned}"
-  }
+  #disk {
+  #  unit_number = 1
+  #  label = "${var.vsphere_disk1_name}"
+    #size  = "${var.vsphere_disk1_size}"  # Custom disk size
+  #  size  = "${data.vsphere_virtual_machine.template.disks.1.size}"  # use the template size
+  #  eagerly_scrub = "${data.vsphere_virtual_machine.template.disks.1.eagerly_scrub}"
+  #  thin_provisioned = "${data.vsphere_virtual_machine.template.disks.1.thin_provisioned}"
+  #}
 
 
    clone {
@@ -108,22 +107,40 @@ resource "vsphere_virtual_machine" "vm" {
     }
   }
 
+  provisioner "file" { ### add this to copy the install batch file to the server
+    source      = "C:\\users\\clewis\\documents\\github\\devops_trn\\swe-dso-infrastructure\\bgann-test\\scripts\\server_hardening.ps1"
+    destination = "C:\\scripts\\server_hardening.ps1"
+
     connection { ### add this for the ability to run post install scripts
     type     = "winrm"
+    #host     = "${var.vsphere_hostname}"
     user     = "${var.vsphere_user}"
     password = "${var.vsphere_password}"
-    timeout  = "30m"
+    https    = "false"
+    insecure = "true"
+    use_ntlm = "true"
+    #timeout  = "05m"
   }
-
-  provisioner "file" { ### add this to copy the install batch file to the server
-    source      = "D:\\Tools\\Hardening\\Splunk\\v7.0.4\\splunk-installx64-SWE(MAN).bat"
-    destination = "C:\\scripts\\splunk.bat"
+   
   }
-
-  provisioner "remote-exec" { ### add this to run the install batch file
+provisioner "remote-exec" { ### add this to run the install batch file
     inline = [
-      "cmd.exe /c C:\\scripts\\splunk.bat"
+      "Powershell.exe  -executionpolicy bypass -file C:\\scripts\\server_hardening.ps1"
     ]
+       
+    connection { ### add this for the ability to run post install scripts
+    type     = "winrm"
+    #host     = "${var.vsphere_hostname}"
+    user     = "${var.vsphere_user}"
+    password = "${var.vsphere_password}"
+    https    = "false"
+    insecure = "true"
+    use_ntlm = "true"
+    #timeout  = "05m"
   }
+
+
 }
+}
+
 
