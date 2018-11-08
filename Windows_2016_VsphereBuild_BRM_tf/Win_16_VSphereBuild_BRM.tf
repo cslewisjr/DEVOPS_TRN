@@ -126,7 +126,7 @@ resource "vsphere_virtual_machine" "vm" {
   #provisioner "null_resource" "remoting" {
   provisioner "remote-exec" {
     inline = [
-      "Powershell.exe -executionpolicy bypass -file C:\\scripts\\server_hardening.ps1",
+      PowerShell.exe -Command "Start-Process PowerShell -Verb RunAs -argumentlist \-executionpolicy bypass -file c:\scripts\hardening_script.ps1\",
     ]
 
     connection { ### add this for the ability to run post install scripts
